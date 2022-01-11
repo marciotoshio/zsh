@@ -20,10 +20,13 @@ async_init
 
 # Options {{{
 # Set to 1 to show the date
-DRACULA_DISPLAY_TIME=${DRACULA_DISPLAY_TIME:-0}
+DRACULA_DISPLAY_TIME=${DRACULA_DISPLAY_TIME:--1}
 
 # Set to 1 to show the 'context' segment
-DRACULA_DISPLAY_CONTEXT=${DRACULA_DISPLAY_CONTEXT:-0}
+DRACULA_DISPLAY_CONTEXT=${DRACULA_DISPLAY_CONTEXT:--1}
+
+# Set to 1 to show the 'rvm' segment
+DRACULA_DISPLAY_RVM=${DRACULA_DISPLAY_RVM:-1}
 
 # Changes the arrow icon
 DRACULA_ARROW_ICON=${DRACULA_ARROW_ICON:-➜}
@@ -59,18 +62,18 @@ DRACULA_GIT_NOLOCK=${DRACULA_GIT_NOLOCK:-$(dracula_test_git_optional_lock)}
 # Status segment {{{
 # arrow is green if last command was successful, red if not, 
 # turns yellow in vi command mode
-PROMPT='%(1V:%F{yellow}:%(?:%F{green}:%F{red}))${DRACULA_ARROW_ICON}'
+PROMPT='%(1V:%F{yellow}:%(?:%F{green}:%F{red}$(tput bel)))${DRACULA_ARROW_ICON}'
 # }}}
 
 # Time segment {{{
 dracula_time_segment() {
-  if (( DRACULA_DISPLAY_TIME )); then
+  if (( DRACULA_DISPLAY_TIME == 1 )); then
     if [[ -z "$TIME_FORMAT" ]]; then
-      TIME_FORMAT=" %-H:%M"
+      TIME_FORMAT=" %D %-H:%M"
       
       # check if locale uses AM and PM
       if ! locale -ck LC_TIME | grep 'am_pm=";"' > /dev/null; then
-        TIME_FORMAT=" %-I:%M%p"
+        TIME_FORMAT=" %D %-I:%M%p"
       fi
     fi
 
@@ -83,7 +86,7 @@ PROMPT+='%F{green}%B$(dracula_time_segment) '
 
 # User context segment {{{
 dracula_context() {
-  if (( DRACULA_DISPLAY_CONTEXT )); then
+  if (( DRACULA_DISPLAY_CONTEXT == 1 )); then
     if [[ -n "${SSH_CONNECTION-}${SSH_CLIENT-}${SSH_TTY-}" ]] || (( EUID == 0 )); then
       echo '%n@%m '
     else
@@ -97,6 +100,16 @@ PROMPT+='%F{magenta}%B$(dracula_context)'
 
 # Directory segment {{{
 PROMPT+='%F{blue}%B%c '
+# }}}
+
+# Rvm segment {{{
+dracula_rvm_segment() {
+  if (( DRACULA_DISPLAY_RVM == 1 )); then
+    echo $(rvm-prompt)
+  fi
+}
+
+PROMPT+='%F{yellow}%B$(dracula_rvm_segment) '
 # }}}
 
 # Async git segment {{{
